@@ -1,11 +1,16 @@
 package com.project.book_store.service.impl;
 
 import com.project.book_store.dto.UserInfoDto;
+import com.project.book_store.entity.UserInfo;
+import com.project.book_store.mapper.UserInfoMapper;
 import com.project.book_store.repository.UserInfoRepository;
 import com.project.book_store.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
+
+@Service
 public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
@@ -16,6 +21,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public UserInfoDto createUser(UserInfoDto userInfoDto) {
-        return null;
+        UserInfo userInfo = UserInfoMapper.toEntity(userInfoDto);
+        userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        userInfoRepository.save(userInfo);
+        return UserInfoMapper.toDto(userInfo);
     }
 }
