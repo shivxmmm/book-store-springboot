@@ -4,8 +4,13 @@ import com.project.book_store.dto.UserInfoDto;
 import com.project.book_store.entity.UserInfo;
 import com.project.book_store.mapper.UserInfoMapper;
 import com.project.book_store.repository.UserInfoRepository;
+import com.project.book_store.service.JWTService;
 import com.project.book_store.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +24,30 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Autowired
     public PasswordEncoder passwordEncoder;
 
+    @Autowired
+    public AuthenticationManager authenticationManager;
+
+    @Autowired
+    public JWTService jwtService;
+
     @Override
     public UserInfoDto createUser(UserInfoDto userInfoDto) {
         UserInfo userInfo = UserInfoMapper.toEntity(userInfoDto);
         userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
         userInfoRepository.save(userInfo);
         return UserInfoMapper.toDto(userInfo);
+    }
+
+    @Override
+    public String getUserInfo(UserInfoDto userInfoDto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userInfoDto.userName(), userInfoDto.password()
+                )
+        );
+        if (authentication.isAuthenticated())
+            return jwtService.generateToken(userInfoDto.userName());
+
+        return "Failure";
     }
 }
